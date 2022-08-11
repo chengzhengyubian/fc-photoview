@@ -1,0 +1,93 @@
+# 规范文档参考:
+# 中文：https://github.com/Serverless-Devs/Serverless-Devs/blob/master/spec/zh/0.0.2/serverless_package_model/package_model.md#应用模型规范
+# English: https://github.com/Serverless-Devs/Serverless-Devs/blob/master/spec/en/0.0.2/serverless_package_model/package_model.md#Application-model-specification
+# --------------
+# Package 开发发布最佳实践:
+#   - [社区讨论 #62](https://github.com/Serverless-Devs/Serverless-Devs/discussions/62);
+#   - [社区讨论 #407](https://github.com/Serverless-Devs/Serverless-Devs/discussions/407);
+#   - [社区讨论 #439](https://github.com/Serverless-Devs/Serverless-Devs/discussions/439);
+
+Type: Application
+Name: p
+Provider:
+  -  阿里云
+Version: dev
+Description: 相册
+HomePage: https://github.com/chengzhengyubian/photoview
+Tags: #标签详情
+  - 部署函数
+  - 部署组件
+Category: 全栈应用 # 基础云服务/Web框架/Web应用/人工智能/音视频处理/图文处理/监控告警/大数据/IoT/新手入门/其他
+Service: # 使用的服务
+  函数计算:
+    # Runtime: Python 3.6 如果服务是函数，还需要增加Runtime
+    Authorities: #权限描述
+      - AliyunFCFullAccess # 所需要的权限
+Parameters:
+  type: object
+  additionalProperties: false # 不允许增加其他属性
+  required: # 必填项
+    - region
+    - serviceName
+    - functionName
+    - accessKeyId
+    - accessKeySecret
+    - endpoint
+    - database
+    - resourceArn
+    - secretArn
+  properties:
+    region:
+      title: 地域
+      type: string
+      default: cn-hangzhou
+      description: 创建应用所在的地区
+      enum:
+        - cn-beijing
+        - cn-hangzhou
+        - cn-shanghai
+    serviceName:
+      title: 服务名
+      type: string
+      default: fc-dataApi-serverlessDB
+      pattern: "^[a-zA-Z_][a-zA-Z0-9-_]{0,127}$"
+      description: 服务名称，只能包含字母、数字、下划线和中划线。不能以数字、中划线开头。长度在 1-128 之间
+    functionName:
+      title: 函数名
+      type: string
+      default: photoview
+      description: 函数名称，只能包含字母、数字、下划线和中划线。不能以数字、中划线开头。长度在 1-64 之间
+    accessKeyId:
+      type: secret
+      title: accessKeyId
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+    accessKeySecret:
+      type: secret
+      title: accessKeySecret
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+    endpoint:
+      type: secret
+      title: endpoint
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+      #default: secretsecret1
+    database:
+      type: secret
+      title: database
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+      #default: secretsecret1
+    resourceArn:
+      type: secret
+      title: resourceArn
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+      #default: secretsecret1
+    secretArn:
+      type: secret
+      title: secretArn
+      pattern: "^[a-zA-Z0-9]{8,30}$"
+      description: 字母、数字、下划线，长度8-30位
+      #default: secretsecret1

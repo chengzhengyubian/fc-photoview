@@ -1,0 +1,85 @@
+edition: 1.0.0          #  命令行YAML规范版本，遵循语义化版本（Semantic Versioning）规范
+name: photoview       #  项目名称
+access: "{{ access }}"  #  秘钥别名
+
+vars: # 全局变量
+  region: "{{ region }}"
+  service:
+    name: "{{ serviceName }}"
+    description: '云相册'
+    internetAccess: true
+
+services:
+  photoview:
+    component: fc
+    actions:
+      pre-deploy:
+        - run: GO111MODULE=on go get github.com/aliyun/fc-runtime-go-sdk
+          path: ./code/api
+        - run: go install
+          path: ./coe/api
+        - run: npm install
+          path: ./code/ui
+    props:
+      region: ${vars.region}
+      service: ${vars.service}
+      function:
+        name: "{{ functionName }}"
+        description:
+        codeUri: ./code/api
+        handler: server
+        memorySize: 128
+        runtime: go1.18
+        timeout: 5
+        environmentVariables:
+          ACCESS_KEY_ID: "{{ accessKeyId }}"
+          ACCESS_KEY_SECRET: "{{ accessKeySecret }}"
+          ENDPOINT: "{{ endpoint }}"
+          DATABASE: "{{ database }}"
+          RESOURCE_ARN: "{{ resourceArn }}"
+          SECRET_ARN: "{{ secretArn }}"
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - HEAD
+              - OPTIONS
+  ui:
+    component: fc
+    actions:
+      pre-deploy:
+        - run: npm install
+          path: ./code/ui
+    props:
+      region: ${vars.region}
+      service: ${vars.service}
+      function:
+        name: "{{ uiFunctionName }}"
+        description:
+        codeUri: ./code/ui
+        memorySize: 128
+        caPort: 1234
+        customRuntimeConfig:
+          command:
+            - npx
+            - vite
+        runtime: custom
+        timeout: 5
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - HEAD
+              - OPTIONS
