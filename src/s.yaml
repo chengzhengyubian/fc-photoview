@@ -8,7 +8,6 @@ vars: # 全局变量
     name: "{{ serviceName }}"
     description: '云相册'
     internetAccess: true
-
 services:
   photoview:
     component: fc
