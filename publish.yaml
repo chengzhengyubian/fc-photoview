@@ -11,7 +11,7 @@ Type: Application
 Name: photoview
 Provider:
   -  阿里云
-Version: 1.0.4
+Version: 1.0.5
 Description: 相册
 HomePage: https://github.com/chengzhengyubian/photoview
 Tags: #标签详情
@@ -69,24 +69,24 @@ Parameters:
     endpoint:
       type: string
       title: endpoint
-      pattern: "^[a-zA-Z_][a-zA-Z0-9-_]{0,127}$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9-_\.\/]{0,127}$"
       description: 数据库连接参数ENDPOINT
       #default: secretsecret1
     database:
       type: string
       title: database
-      pattern: "^[a-zA-Z_][a-zA-Z0-9-_]{0,127}$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9-_\.\/]{0,127}$"
       description: 数据库连接参数DATABASE
       #default: secretsecret1
     resourceArn:
       type: secret
       title: resourceArn
-      pattern: "^[a-zA-Z_][a-zA-Z0-9-_]{0,127}$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9-_\.\/]{0,127}$"
       description: 数据库连接参数RESOURCE_ARN
       #default: secretsecret1
     secretArn:
       type: secret
       title: secretArn
-      pattern: "^[a-zA-Z_][a-zA-Z0-9-_]{0,127}$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9-_\.\/]{0,127}$"
       description: 数据库连接参数SECRET_ARN
       #default: secretsecret1
