@@ -1,6 +1,5 @@
 package models
 
-//修改完
 import (
 	"crypto/md5"
 	"encoding/hex"
@@ -36,36 +35,15 @@ func (a *Album) BeforeSave( /*tx *gorm.DB*/ ) (err error) {
 
 // GetChildren performs a recursive query to get all the children of the album.
 // An optional filter can be provided that can be used to modify the query on the children.
-func (a *Album) GetChildren( /*db *gorm.DB*/ filter func(sql string) string) (children []*Album, err error) {
+func (a *Album) GetChildren(filter func(sql string) string) (children []*Album, err error) {
 	return GetChildrenFromAlbums(filter, []int{a.ID})
 }
 
-//修改完，待测试
-func GetChildrenFromAlbums( /*db *gorm.DB*/ filter func(sql string) string, albumIDs []int) (children []*Album, err error) {
-	//query := db.Model(&Album{}).Table("sub_albums")
+func GetChildrenFromAlbums(filter func(sql string) string, albumIDs []int) (children []*Album, err error) {
 	sql_albums_se := "select * from sub_albums"
-	//标记一下，应该是递归
 	if filter != nil {
-		//query = filter(query)
 		sql_albums_se = filter(sql_albums_se)
 	}
-	//err = db.Raw(`
-	//WITH recursive sub_albums AS (
-	//	SELECT * FROM albums AS root WHERE id IN (?)
-	//	UNION ALL
-	//	SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-	//)
-	//
-	//?
-	//`, albumIDs, query).Find(&children).Error
-	/* WITH recursive sub_albums AS (
-	           SELECT * FROM albums AS root WHERE id IN (110)
-	           UNION ALL
-	           SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-	   )
-
-	   SELECT * FROM `sub_albums`
-	*/
 	albumID, _ := json.Marshal(albumIDs)
 	albumids := strings.Trim(string(albumID), "[]")
 	sql_albums_se = fmt.Sprintf("WITH recursive sub_albums AS (SELECT * FROM albums AS root WHERE id IN (%v)  UNION ALL  SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id) %v", albumids, sql_albums_se)
@@ -91,30 +69,13 @@ func (a *Album) GetParents(filter func(sql string) string) (parents []*Album, er
 	return GetParentsFromAlbums(filter, a.ID)
 }
 
-//修改完，待测试
 func GetParentsFromAlbums(filter func(sql string) string, albumID int) (parents []*Album, err error) {
-	//query := db.Model(&Album{}).Table("super_albums")
+
 	sql_albums_se := "select * from super_albums"
 	if filter != nil {
 		sql_albums_se = filter(sql_albums_se)
 	}
 
-	//err = db.Raw(`
-	//WITH recursive super_albums AS (
-	//	SELECT * FROM albums AS leaf WHERE id = ?
-	//	UNION ALL
-	//	SELECT parent.* from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id
-	//)
-	//
-	//?
-	//`, albumID, sql_albums_se).Find(&parents).Error
-	/*WITH recursive super_albums AS (
-	          SELECT * FROM albums AS leaf WHERE id = 1
-	          UNION ALL
-	          SELECT parent.* from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id
-	  )
-
-	  SELECT * FROM `super_albums` WHERE id IN (1)*/
 	sql_albums_se = fmt.Sprintf("WITH recursive super_albums AS (SELECT * FROM albums AS leaf WHERE id = %v UNION ALL SELECT parent.* from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id) %v", albumID, sql_albums_se)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_albums_se)
@@ -134,39 +95,10 @@ func GetParentsFromAlbums(filter func(sql string) string, albumID int) (parents 
 	return parents, err
 }
 
-//修改完，暂时没问题
-
 func (a *Album) Thumbnail( /*db *gorm.DB*/ ) (*Media, error) {
 	var media Media
 
 	if a.CoverID == nil {
-		//if err := db.Raw(`
-		//	WITH recursive sub_albums AS (
-		//		SELECT * FROM albums AS root WHERE id = ?
-		//		UNION ALL
-		//		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-		//	)
-		//
-		//	SELECT * FROM media WHERE media.album_id IN (
-		//		SELECT id FROM sub_albums
-		//	) AND media.id IN (
-		//		SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-		//	) ORDER BY id LIMIT 1
-		//`, a.ID).Find(&media).Error; err != nil {
-		//	return nil, err
-		//}
-		/* WITH recursive sub_albums AS (
-		           SELECT * FROM albums AS root WHERE id = 1
-		           UNION ALL
-		           SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-		   )
-
-		   SELECT * FROM media WHERE media.album_id IN (
-		           SELECT id FROM sub_albums
-		   ) AND media.id IN (
-		           SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-		   ) ORDER BY id LIMIT 1
-		*/
 		sql_media_se := fmt.Sprintf("WITH recursive sub_albums AS (SELECT * FROM albums AS root WHERE id = %v UNION ALL SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id) SELECT * FROM media WHERE media.album_id IN (SELECT id FROM sub_albums) AND media.id IN (SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id) ORDER BY id LIMIT 1", a.ID)
 		dataApi, _ := DataApi.NewDataApiClient()
 		res, err := dataApi.Query(sql_media_se)
@@ -195,9 +127,6 @@ func (a *Album) Thumbnail( /*db *gorm.DB*/ ) (*Media, error) {
 			return nil, err
 		}
 	} else {
-		//if err := db.Where("id = ?", a.CoverID).Find(&media).Error; err != nil {
-		//	return nil, err
-		//}
 		id := *a.CoverID
 		sql_media_se := fmt.Sprintf("select * from media where id=%v", id)
 		dataApi, _ := DataApi.NewDataApiClient()

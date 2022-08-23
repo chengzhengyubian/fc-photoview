@@ -1,6 +1,5 @@
 package scanner
 
-/*修改完*/
 import (
 	"context"
 	"fmt"
@@ -21,25 +20,17 @@ import (
 
 //
 
-func ScanMedia( /*tx *gorm.DB, */ mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	{ // Check if media already exists
 		var media []*models.Media
-		//result := tx.Debug().Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&media)
-		//sql_media_se := "select * from media where path_hash =\"" + models.MD5Hash(mediaPath) + "\""
 		sql_media_se := fmt.Sprintf("select * from media where path_hash='%v'", models.MD5Hash(mediaPath))
 		dataApi, _ := DataApi.NewDataApiClient()
 		res, err := dataApi.Query(sql_media_se)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "scan media fetch from database")
 		}
-		//if len(res) == 0 {
-		//	return nil, false, errors.Wrap(err, "scan media fetch from database")
-		//}
-		//if result.Error != nil {
-		//	return nil, false, errors.Wrap(result.Error, "scan media fetch from database")
-		//}
 		fmt.Print(res, "media result")
 		num := len(res)
 		for i := 0; i < num; i++ {
@@ -68,10 +59,6 @@ func ScanMedia( /*tx *gorm.DB, */ mediaPath string, albumId int, cache *scanner_
 			// log.Printf("Media already scanned: %s\n", mediaPath)
 			return media[0], false, nil
 		}
-		//if result.RowsAffected > 0 {
-		//	// log.Printf("Media already scanned: %s\n", mediaPath)
-		//	return media[0], false, nil
-		//}
 	}
 	log.Printf("Scanning media: %s\n", mediaPath)
 
@@ -101,21 +88,18 @@ func ScanMedia( /*tx *gorm.DB, */ mediaPath string, albumId int, cache *scanner_
 		DateShot: stat.ModTime(),
 	}
 	timestr := media.DateShot.Format("2006-01-02 15:04:05")
-	/*if err := tx.Debug().Create(&media).Error; err != nil { //INSERT INTO `media` (`created_at`,`updated_at`,`title`,`path`,`path_hash`,`album_id`,`exif_id`,`date_shot`,`type`,`video_metadata_id`,`side_car_path`,`side_car_hash`,`blurhash`) VALUES ('2022-08-04 11:18:51.083','2022-08-04 11:18:51.083','自我介绍.png','/Users/chengbian/suiapp/photo/photoper/自我介绍.png','f9b6fd9b47d427178a9d22198dac7c9c',148,NULL,'2022-06-30 17:50:25.916','photo',NULL,NULL,NULL,NULL
-		return nil, false, errors.Wrap(err, "could not insert media into database")
-	}*/
 	var Type string
 	if media.Type == models.MediaTypePhoto {
 		Type = "photo"
 	} else {
 		Type = "video"
 	}
-	//sql_media_in := "insert into media (created_at, updated_at,title,path, path_hash,album_id, date_shot,type) values(NOW(),NOW(),\"" + media.Title + "\",\"" + media.Path + "\",\"" + models.MD5Hash(media.Path) + "\"," + strconv.Itoa(media.AlbumID) + ",\"" + timestr + "\",\"" + Type + "\")"
 	sql_media_in := fmt.Sprintf("insert into media (created_at, updated_at,title,path, path_hash,album_id, date_shot,type) values(NOW(),NOW(),'%v','%v','%v',%v,'%v','%v')", media.Title, media.Path, models.MD5Hash(media.Path), media.AlbumID, timestr, Type)
-	//sql_media_urls_in := fmt.Sprintf("insert into media_urls(created_at, updated_at,media_id,media_name,)")
 	sql_media_se := fmt.Sprintf("select id from media where path_hash='%v'", models.MD5Hash(media.Path))
 	dataApi, _ := DataApi.NewDataApiClient()
-
+	//体现serverless特性
+	//sql_serverless_test := "select benchmark(37000000 ,crc32('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'))"
+	//dataApi.Query(sql_serverless_test)
 	dataApi.ExecuteSQl(sql_media_in)
 	res, err := dataApi.Query(sql_media_se)
 	for len(res) == 0 {
@@ -126,18 +110,12 @@ func ScanMedia( /*tx *gorm.DB, */ mediaPath string, albumId int, cache *scanner_
 	return &media, true, nil
 }
 
-//这里有一个函数还没改，已经改了大部分
-
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
 // Function waits for processing to finish before returning.
 func ProcessSingleMedia( /*db *gorm.DB, */ media *models.Media) error {
 	album_cache := scanner_cache.MakeAlbumCache()
 
 	var album models.Album
-	//if err := db.Model(media).Association("Album").Find(&album); err != nil { //SELECT * FROM `albums` WHERE `albums`.`id` = 1
-	//
-	//	return err
-	//}
 	sql_albums_se := "SELECT * FROM `albums` WHERE `albums`.`id` =" + strconv.Itoa(media.AlbumID)
 	dataAPi, _ := DataApi.NewDataApiClient()
 	res, err := dataAPi.Query(sql_albums_se)

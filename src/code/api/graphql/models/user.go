@@ -1,18 +1,17 @@
 package models
 
-//修改完
+import "time"
+
 import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	DataApi "github.com/photoview/photoview/api/dataapi"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 	"rds-data-20220330/client"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -81,7 +80,6 @@ var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 func AuthorizeUser(username string, password string) (*User, error) {
 	var user User
 
-	//result := db.Where("username = ?", username).First(&user)
 	sql_users_se := "select * from users where username=\"" + username + "\""
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.ExecuteSQl(sql_users_se)
@@ -107,7 +105,6 @@ func AuthorizeUser(username string, password string) (*User, error) {
 
 //修改后
 func RegisterUser(username string, password *string, admin bool) (*User, error) {
-	//sql执行后的返回体
 	var res *client.ExecuteStatementResponse
 	user := User{
 		Username: username,
@@ -128,19 +125,14 @@ func RegisterUser(username string, password *string, admin bool) (*User, error) 
 	} else {
 		ad = 0
 	}
-	//user.Admin = admin
-	//user.Username = username
-	//user.Password = password
 	var sql_users_in string
 	var pass string
 	if password != nil {
 		pass = *user.Password
 	}
 	if password != nil {
-		//sql_users_in = "insert into users (username,password,admin) values (\"" + username + "\",\"" + *password + "\"," + strconv.Itoa(ad) + ")"
 		sql_users_in = fmt.Sprintf("insert into users (created_at,updated_at,username,password,admin) values(NOW(),NOW(),'%v','%v',%v)", username, pass, ad)
 	} else {
-		//sql_users_in = "insert into users (username,admin) values (\"" + username + "\"," + strconv.Itoa(ad) + ")"
 		sql_users_in = fmt.Sprintf("insert into users (created_at,updated_at,username,admin) values(NOW(),NOW(),'%v',%v)", username, ad)
 	}
 	dataApi, _ := DataApi.NewDataApiClient()
@@ -158,7 +150,6 @@ func RegisterUser(username string, password *string, admin bool) (*User, error) 
 	return &user, nil
 }
 
-//更改完
 func (user *User) GenerateAccessToken() (*AccessToken, error) {
 
 	bytes := make([]byte, 24)
@@ -178,7 +169,6 @@ func (user *User) GenerateAccessToken() (*AccessToken, error) {
 		Value:  token_value,
 		Expire: expire,
 	}
-	//result := db.Debug().Create(&token) //INSERT INTO `access_tokens` (`created_at`,`updated_at`,`user_id`,`value`,`expire`) VALUES ('2022-07-28 11:00:10.268','2022-07-28 11:00:10.268',2,'s4vXN6n7Vyh2ZYN6nT1vCqic','2022-08-11 11:00:10.267')
 	sql_access_tokens_in := "insert into access_tokens(created_at,updated_at,user_id,value,expire) values(NOW(),NOW()," + strconv.Itoa(user.ID) + ",'" + token_value + "','" + timeStr + "')"
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.ExecuteSQl(sql_access_tokens_in)
@@ -228,7 +218,6 @@ func (user *User) FillAlbums() error {
 	return nil
 }
 
-//这里还未改,应该是递归
 func (user *User) OwnsAlbum(album *Album) (bool, error) {
 
 	if err := user.FillAlbums(); err != nil {
@@ -239,10 +228,6 @@ func (user *User) OwnsAlbum(album *Album) (bool, error) {
 	for _, a := range user.Albums {
 		albumIDs = append(albumIDs, a.ID)
 	}
-
-	//filter := func(query *gorm.DB) *gorm.DB {
-	//	return query.Where("id IN (?)", albumIDs)
-	//}
 	albumID, _ := json.Marshal(albumIDs)
 	albumids := strings.Trim(string(albumID), "[]")
 	filter := func(sql string) string {
@@ -256,7 +241,7 @@ func (user *User) OwnsAlbum(album *Album) (bool, error) {
 	return len(ownedParents) > 0, nil
 }
 
-// FavoriteMedia sets/clears a media as favorite for the user//修改了一下
+// FavoriteMedia sets/clears a media as favorite for the user
 func (user *User) FavoriteMedia( /*db *gorm.DB,*/ mediaID int, favorite bool) (*Media, error) {
 	var fav int
 	if favorite == true {
@@ -264,10 +249,8 @@ func (user *User) FavoriteMedia( /*db *gorm.DB,*/ mediaID int, favorite bool) (*
 	} else {
 		fav = 0
 	}
-	//sql_user_media_data_se := "select * from user_media_data where user_id =" + strconv.Itoa(user.ID)
 	sql_user_media_data_se := fmt.Sprintf("select * from user_media_data where user_id =%v and media_id=%v", user.ID, mediaID)
 	sql_user_media_data_in := "INSERT INTO `user_media_data` (`created_at`,`updated_at`,`user_id`,`media_id`,`favorite`) VALUES (NOW(),NOW()," + strconv.Itoa(user.ID) + "," + strconv.Itoa(mediaID) + "," + strconv.Itoa(fav) + ")"
-	//sql_user_media_data_up := "UPDATE user_media_data set updated_at=NOW(),favorite=" + strconv.Itoa(fav) + "where user_id =" + strconv.Itoa(user.ID) + "and media_id =" + strconv.Itoa(mediaID)
 	sql_user_media_data_up := fmt.Sprintf("UPDATE user_media_data set updated_at=NOW(),favorite=%v where user_id=%v and media_id=%v", fav, user.ID, mediaID)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.ExecuteSQl(sql_user_media_data_se)

@@ -1,6 +1,5 @@
 package routes
 
-//修改完
 import (
 	"archive/zip"
 	"encoding/json"
@@ -17,7 +16,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
-//修改完，待测试
 func RegisterDownloadRoutes( /*db *gorm.DB,*/ router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
 		albumID := mux.Vars(r)["album_id"]
@@ -25,12 +23,7 @@ func RegisterDownloadRoutes( /*db *gorm.DB,*/ router *mux.Router) {
 		mediaPurposeList := strings.SplitN(mediaPurpose, ",", 10)
 
 		var album models.Album
-		/*if err := db.Find(&album, albumID).Error; err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404"))
-			return
-		}*/
-		sql_albums_se := fmt.Sprintf("select * from album where id=%v", albumID)
+		sql_albums_se := fmt.Sprintf("select * from albums where id=%v", albumID)
 		dataApi, _ := DataApi.NewDataApiClient()
 		res, _ := dataApi.Query(sql_albums_se)
 		album.ID = DataApi.GetInt(res, 0, 0)
@@ -50,22 +43,9 @@ func RegisterDownloadRoutes( /*db *gorm.DB,*/ router *mux.Router) {
 			return
 		}
 
-		//var mediaWhereQuery string
-		/*if drivers.POSTGRES.MatchDatabase(db) {
-			mediaWhereQuery = "\"Media\".album_id = ?"
-		} else {
-			mediaWhereQuery = "Media.album_id = ?"
-		}*/
-
 		var mediaURLs []*models.MediaURL
-		/*if err := db.Joins("Media").Where(mediaWhereQuery, album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
-			return
-		}*/
 		mediapurpose, _ := json.Marshal(mediaPurposeList)
 		mediapurposelist := strings.Trim(string(mediapurpose), "[]")
-		/*SELECT `media_urls`.`id`,`media_urls`.`created_at`,`media_urls`.`updated_at`,`media_urls`.`media_id`,`media_urls`.`media_name`,`media_urls`.`width`,`media_urls`.`height`,`media_urls`.`purpose`,`media_urls`.`content_type`,`media_urls`.`file_size`,`Media`.`id` AS `Media__id`,`Media`.`created_at` AS `Media__created_at`,`Media`.`updated_at` AS `Media__updated_at`,`Media`.`title` AS `Media__title`,`Media`.`path` AS `Media__path`,`Media`.`path_hash` AS `Media__path_hash`,`Media`.`album_id` AS `Media__album_id`,`Media`.`exif_id` AS `Media__exif_id`,`Media`.`date_shot` AS `Media__date_shot`,`Media`.`type` AS `Media__type`,`Media`.`video_metadata_id` AS `Media__video_metadata_id`,`Media`.`side_car_path` AS `Media__side_car_path`,`Media`.`side_car_hash` AS `Media__side_car_hash`,`Media`.`blurhash` AS `Media__blurhash` FROM `media_urls` LEFT JOIN `media` `Media` ON `media_urls`.`media_id` = `Media`.`id` WHERE Media.album_id = 146 AND media_urls.purpose IN ('original')*/
 		sql_media_urls_se := fmt.Sprintf("SELECT `media_urls`.`id`,`media_urls`.`created_at`,`media_urls`.`updated_at`,`media_urls`.`media_id`,`media_urls`.`media_name`,`media_urls`.`width`,`media_urls`.`height`,`media_urls`.`purpose`,`media_urls`.`content_type`,`media_urls`.`file_size`,`Media`.`id` AS `Media__id`,`Media`.`created_at` AS `Media__created_at`,`Media`.`updated_at` AS `Media__updated_at`,`Media`.`title` AS `Media__title`,`Media`.`path` AS `Media__path`,`Media`.`path_hash` AS `Media__path_hash`,`Media`.`album_id` AS `Media__album_id`,`Media`.`exif_id` AS `Media__exif_id`,`Media`.`date_shot` AS `Media__date_shot`,`Media`.`type` AS `Media__type`,`Media`.`video_metadata_id` AS `Media__video_metadata_id`,`Media`.`side_car_path` AS `Media__side_car_path`,`Media`.`side_car_hash` AS `Media__side_car_hash`,`Media`.`blurhash` AS `Media__blurhash` FROM `media_urls` LEFT JOIN `media` `Media` ON `media_urls`.`media_id` = `Media`.`id` WHERE Media.album_id = %v AND media_urls.purpose IN (%v)", album.ID, mediapurposelist)
 		dataAPi, _ := DataApi.NewDataApiClient()
 		res, _ = dataAPi.Query(sql_media_urls_se)
@@ -74,7 +54,6 @@ func RegisterDownloadRoutes( /*db *gorm.DB,*/ router *mux.Router) {
 			w.Write([]byte("internal server error"))
 			return
 		}
-		//fmt.Print(res)
 		num := len(res)
 		for i := 0; i < num; i++ {
 			var mediaURL models.MediaURL

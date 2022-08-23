@@ -15,13 +15,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-//修改完
 // Higher order function used to check if MediaURL for a given MediaPurpose exists
 func makePhotoURLChecker( /*tx *gorm.DB, */ mediaID int) func(purpose models.MediaPurpose) (*models.MediaURL, error) {
 	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
 		var mediaURL []*models.MediaURL
-		// SELECT * FROM `media_urls` WHERE purpose = 'high-res' AND media_id = 2
-		//result := tx.Where("purpose = ?", purpose).Where("media_id = ?", mediaID).Find(&mediaURL) //SELECT * FROM `media_urls` WHERE purpose = 'original' AND media_id = 2
 		var pur string
 		switch purpose {
 		case models.PhotoThumbnail:
@@ -94,8 +91,7 @@ func generateUniqueMediaName(mediaPath string) string {
 	return mediaName
 }
 
-//修改完
-func saveOriginalPhotoToDB( /*tx *gorm.DB,*/ photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions *media_utils.PhotoDimensions) (*models.MediaURL, error) {
+func saveOriginalPhotoToDB(photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions *media_utils.PhotoDimensions) (*models.MediaURL, error) {
 	originalImageName := generateUniqueMediaName(photo.Path)
 
 	contentType, err := imageData.ContentType()
@@ -117,12 +113,6 @@ func saveOriginalPhotoToDB( /*tx *gorm.DB,*/ photo *models.Media, imageData *med
 		ContentType: string(*contentType),
 		FileSize:    fileStats.Size(),
 	}
-
-	//if err := tx.Create(&mediaURL).Error; err != nil { //INSERT INTO `media_urls` (`created_at`,`updated_at`,`media_id`,`media_name`,`width`,`height`,`purpose`,`content_type`,`file_size`) VALUES ('2022-08-01 17:28:21.117','2022-08-01 17:28:21.117',0,'自我介绍_yDPkSVVK.png',1844,1074,'original','image/png',1701845)
-	//	return nil, errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photo.Title)
-	//}
-	//timestr := time.Now().Format("2006-01-02 15:04:05")
-	//"INSERT INTO `media_urls` (`created_at`,`updated_at`,`media_id`,`media_name`,`width`,`height`,`purpose`,`content_type`,`file_size`) VALUES ('2022-08-01 17:28:21.117','2022-08-01 17:28:21.117',0,'自我介绍_yDPkSVVK.png',1844,1074,'original','image/png',1701845)"
 	sql_media_urls_in := fmt.Sprintf("INSERT INTO `media_urls` (`created_at`,`updated_at`,`media_id`,`media_name`,`width`,`height`,`purpose`,`content_type`,`file_size`) VALUES (NOW(),NOW(),%v,'%v',%v,%v,'%v','%v',%v)", mediaURL.Media.ID, mediaURL.MediaName, mediaURL.Width, mediaURL.Height, mediaURL.Purpose, mediaURL.ContentType, mediaURL.FileSize)
 	dataApi, _ := DataApi.NewDataApiClient()
 	dataApi.ExecuteSQl(sql_media_urls_in)

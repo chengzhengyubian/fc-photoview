@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/photoview/photoview/api/dataapi"
 	"log"
 	"net/http"
 	"path"
@@ -39,16 +40,13 @@ func main() {
 	//	log.Panicf("Could not connect to database: %s\n", err)
 	//}
 
-	//// Migrate database
-	//if err := database.MigrateDatabase(db); err != nil {
-	//	log.Panicf("Could not migrate database: %s\n", err)
-	//}
+	//Migrate database
+	dataapi.MigrateDatabase()
 
-	if err := scanner_queue.InitializeScannerQueue( /*db*/ ); err != nil {
-		log.Panicf("Could not initialize scanner queue: %s\n", err)
+	if err := scanner_queue.InitializeScannerQueue( /*db*/); err != nil {
+		log.Panicf("Can't connect database and initialize scanner queue，please check your environmentVariables: %s\n", err)
 	}
-
-	if err := periodic_scanner.InitializePeriodicScanner( /*db*/ ); err != nil {
+	if err := periodic_scanner.InitializePeriodicScanner( /*db*/); err != nil {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
 
@@ -62,8 +60,8 @@ func main() {
 
 	rootRouter := mux.NewRouter()
 
-	rootRouter.Use(dataloader.Middleware( /*db*/ ))
-	rootRouter.Use(auth.Middleware( /*db*/ ))
+	rootRouter.Use(dataloader.Middleware( /*db*/))
+	rootRouter.Use(auth.Middleware( /*db*/))
 	rootRouter.Use(server.LoggingMiddleware)
 	rootRouter.Use(server.CORSMiddleware(devMode))
 
@@ -79,7 +77,7 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint( /*db*/ ))
+	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint( /*db*/))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes( /*db, */ photoRouter)
@@ -114,8 +112,6 @@ func main() {
 		if !shouldServeUI {
 			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
 		}
-
 	}
-
 	log.Panic(http.ListenAndServe(":"+apiListenURL.Port(), handlers.CompressHandler(rootRouter)))
 }

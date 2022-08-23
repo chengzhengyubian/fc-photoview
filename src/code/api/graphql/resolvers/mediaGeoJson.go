@@ -1,6 +1,5 @@
 package resolvers
 
-//修改完
 import (
 	"context"
 	"fmt"
@@ -80,21 +79,6 @@ func (r *queryResolver) MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 
 	var media []*geoMedia
 
-	//err := r.DB(ctx).Table("media").
-	//	Select(
-	//		"media.id AS media_id, media.title AS media_title, "+
-	//			"media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, "+
-	//			"media_exif.gps_latitude AS latitude, media_exif.gps_longitude AS longitude").
-	//	Joins("INNER JOIN media_exif ON media.exif_id = media_exif.id").
-	//	Joins("INNER JOIN media_urls ON media.id = media_urls.media_id").
-	//	Joins("INNER JOIN user_albums ON media.album_id = user_albums.album_id").
-	//	Where("media_exif.gps_latitude IS NOT NULL").
-	//	Where("media_exif.gps_longitude IS NOT NULL").
-	//	Where("media_urls.purpose = 'thumbnail'").
-	//	Where("user_albums.user_id = ?", user.ID).
-	//	Scan(&media).Error
-	/*SELECT media.id AS media_id, media.title AS media_title, media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, media_exif.gps_latitude AS latitude, media_exif.gps_longitude AS longitude FROM `media` INNER JOIN media_exif ON media.exif_id = media_exif.id INNER JOIN media_urls ON media.id = media_urls.media_id INNER JOIN user_albums ON media.album_id = user_albums.album_id WHERE media_exif.gps_latitude IS NOT NULL AND media_exif.gps_longitude IS NOT NULL AND media_urls.purpose = 'thumbnail' AND user_albums.user_id = 24
-	 */
 	sql_media_se := fmt.Sprintf("SELECT media.id AS media_id, media.title AS media_title, media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, media_exif.gps_latitude AS latitude, media_exif.gps_longitude AS longitude FROM `media` INNER JOIN media_exif ON media.exif_id = media_exif.id INNER JOIN media_urls ON media.id = media_urls.media_id INNER JOIN user_albums ON media.album_id = user_albums.album_id WHERE media_exif.gps_latitude IS NOT NULL AND media_exif.gps_longitude IS NOT NULL AND media_urls.purpose = 'thumbnail' AND user_albums.user_id = %v", user.ID)
 	dataApi, _ := dataapi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_se)

@@ -1,6 +1,6 @@
 package scanner_queue
 
-//修改完
+//
 import (
 	"context"
 	"fmt"
@@ -54,11 +54,14 @@ type ScannerQueue struct {
 
 var global_scanner_queue ScannerQueue
 
-func InitializeScannerQueue( /*db *gorm.DB*/ ) error {
+func InitializeScannerQueue() error {
 
 	var concurrentWorkers int
 	{
 		site_info, err := models.GetSiteInfo( /*db*/ )
+		if site_info == nil {
+			return err
+		}
 		if err != nil {
 			return errors.Wrap(err, "get current workers from database")
 		}

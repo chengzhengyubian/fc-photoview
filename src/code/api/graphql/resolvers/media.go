@@ -1,6 +1,5 @@
 package resolvers
 
-//修改完
 import (
 	"context"
 	"encoding/json"
@@ -28,9 +27,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 	return actions.MyMedia(user, order, paginate)
 }
 
-//修改完，未测试
 func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
-	//db := r.DB(ctx)
 	if tokenCredentials != nil {
 
 		shareToken, err := r.ShareToken(ctx, *tokenCredentials)
@@ -47,12 +44,6 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 		return nil, auth.ErrUnauthorized
 	}
 	var media models.Media
-	//err := db.
-	//	Joins("Album").
-	//	Where("media.id = ?", id).
-	//	Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)", user.ID).
-	//	Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
-	//	First(&media).Error
 	subsql := fmt.Sprintf("select media_id from media_urls where media_urls.media_id = media.id")
 	sql_album_se := fmt.Sprintf("select media.*,albums.* from media left join albums on media.album_id=albums.id where media.id= %v and EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = %v) and media.id IN(%v) limit 1", id, user.ID, subsql)
 	dataApi, _ := DataApi.NewDataApiClient()
@@ -87,15 +78,10 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 	media.Album.Path = DataApi.GetString(res, 0, 19)
 	media.Album.PathHash = DataApi.GetString(res, 0, 20)
 	media.Album.CoverID = DataApi.GetIntP(res, 0, 21)
-	//if err != nil {
-	//	return nil, errors.Wrap(err, "could not get media by media_id and user_id from database")
-	//}
 	return &media, nil
 }
 
-//修改完，未测试
 func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Media, error) {
-	//db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -106,15 +92,6 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 	}
 
 	var media []*models.Media
-	//err := db.Model(&media).
-	//	Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
-	//	Where("media.id IN ?", ids).
-	//	Where("user_albums.user_id = ?", user.ID).
-	//	Find(&media).Error
-	//
-	//if err != nil {
-	//	return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")
-	//}
 
 	id, _ := json.Marshal(ids)
 	IDs := strings.Trim(string(id), "[]")
@@ -160,7 +137,6 @@ func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.M
 	return formattedType, nil
 }
 
-//修改完
 func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
 	var album models.Album
 	//err := r.DB(ctx).Find(&album, obj.AlbumID).Error // SELECT * FROM `albums` WHERE `albums`.`id` = 1
@@ -181,12 +157,8 @@ func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.A
 	return &album, nil
 }
 
-//修改完，未测试
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken
-	//if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
-	//	return nil, errors.Wrapf(err, "get shares for media (%s)", media.Path)
-	//}
 	sql_share_tokens_select := fmt.Sprintf("select * from share_tokens where media_id=%v", media.ID)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_share_tokens_select)
@@ -216,13 +188,10 @@ func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*mod
 	return shareTokens, nil
 }
 
-//修改完，未测试
 func (r *mediaResolver) Downloads(ctx context.Context, media *models.Media) ([]*models.MediaDownload, error) {
 
 	var mediaUrls []*models.MediaURL
-	//if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&mediaUrls).Error; err != nil {
-	//	return nil, errors.Wrapf(err, "get downloads for media (%s)", media.Path)
-	//}
+
 	sql_media_urls_select := fmt.Sprintf("select * from media_urls where media_id = %v", media.ID)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_urls_select)
@@ -301,15 +270,12 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*mod
 	return dataloader.For(ctx).MediaVideoWeb.Load(media.ID)
 }
 
-//修改完，未测试
 func (r *mediaResolver) Exif(ctx context.Context, media *models.Media) (*models.MediaEXIF, error) {
 	if media.Exif != nil {
 		return media.Exif, nil
 	}
 	var exif models.MediaEXIF
-	//if err := r.DB(ctx).Model(&media).Association("Exif").Find(&exif); err != nil {
-	//	return nil, err
-	//}
+
 	sql_media_exif_select := fmt.Sprintf("select media_exif.* from media_exif left join media on media.exif_id=media.exif_id and media.id=%v order by media.exif_id limit 1", media.ID)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_exif_select)
@@ -361,10 +327,9 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 		return nil, auth.ErrUnauthorized
 	}
 
-	return user.FavoriteMedia( /*r.DB(ctx), */ mediaID, favorite)
+	return user.FavoriteMedia(mediaID, favorite)
 }
 
-//修改完，未测试
 func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
 	if face_detection.GlobalFaceDetector == nil {
 		return []*models.ImageFace{}, nil
@@ -375,9 +340,6 @@ func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*mode
 	}
 
 	var faces []*models.ImageFace
-	//if err := r.DB(ctx).Model(&media).Association("Faces").Find(&faces); err != nil {
-	//	return nil, err
-	//}
 
 	sql_image_faces_select := fmt.Sprintf("select image_faces.* from image_faces left join media on image_faces.media_id=media.id where media.id=%v", media.ID)
 	dataApi, _ := DataApi.NewDataApiClient()

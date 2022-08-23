@@ -1,6 +1,5 @@
 package actions
 
-//修改完
 import (
 	"fmt"
 	"github.com/photoview/photoview/api/dataapi"
@@ -14,8 +13,7 @@ import (
 	//"gorm.io/gorm/clause"
 )
 
-//修改完，未测试
-func Search( /*db *gorm.DB,*/ query string, userID int, _limitMedia *int, _limitAlbums *int) (*models.SearchResult, error) {
+func Search(query string, userID int, _limitMedia *int, _limitAlbums *int) (*models.SearchResult, error) {
 	limitMedia := 10
 	limitAlbums := 10
 
@@ -31,30 +29,9 @@ func Search( /*db *gorm.DB,*/ query string, userID int, _limitMedia *int, _limit
 
 	var media []*models.Media
 	var sql_user_albums_select string
-	//userSubquery := db.Table("user_albums").Where("user_id = ?", userID)
+
 	sql_user_albums_select = fmt.Sprintf("select * from user_albums where user_id =%v", userID)
-	//if drivers.POSTGRES.MatchDatabase(db) {
-	//	userSubquery = userSubquery.Where("album_id = \"Album\".id")
-	//} else {
-	//	userSubquery = userSubquery.Where("album_id = Album.id")
-	//}
-
-	//err := db.Joins("Album").
-	//	Where("EXISTS (?)", userSubquery).
-	//	Where("LOWER(media.title) LIKE ? OR LOWER(media.path) LIKE ?", wildQuery, wildQuery).
-	//	Clauses(clause.OrderBy{
-	//		Expression: clause.Expr{
-	//			SQL:                "(CASE WHEN LOWER(media.title) LIKE ? THEN 2 WHEN LOWER(media.path) LIKE ? THEN 1 END) DESC",
-	//			Vars:               []interface{}{wildQuery, wildQuery},
-	//			WithoutParentheses: true},
-	//	}).
-	//	Limit(limitMedia).Find(&media).Error
-	//sql_user_albums_select
-
 	sql_media_se := fmt.Sprintf("select media.* from media left join albums on media.album_id=albums.id where EXISTS (%v) and LOWER(media.title) LIKE '%v' OR LOWER(media.path) LIKE '%v' order by  (CASE WHEN LOWER(media.title) LIKE '%v' THEN 2 WHEN LOWER(media.path) LIKE '%v' THEN 1 END) DESC limit %v", sql_user_albums_select, wildQuery, wildQuery, wildQuery, wildQuery, limitMedia)
-	//if err != nil {
-	//	return nil, errors.Wrapf(err, "searching media")
-	//}
 	dataApi, _ := dataapi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_se)
 	num := len(res)
@@ -84,18 +61,6 @@ func Search( /*db *gorm.DB,*/ query string, userID int, _limitMedia *int, _limit
 		media = append(media, &Media)
 	}
 	var albums []*models.Album
-
-	//err = db.
-	//	Where("EXISTS (?)", db.Table("user_albums").Where("user_id = ?", userID).Where("album_id = albums.id")).
-	//	Where("albums.title LIKE ? OR albums.path LIKE ?", wildQuery, wildQuery).
-	//	Clauses(clause.OrderBy{
-	//		Expression: clause.Expr{
-	//			SQL:                "(CASE WHEN albums.title LIKE ? THEN 2 WHEN albums.path LIKE ? THEN 1 END) DESC",
-	//			Vars:               []interface{}{wildQuery, wildQuery},
-	//			WithoutParentheses: true},
-	//	}).
-	//	Limit(limitAlbums).
-	//	Find(&albums).Error
 	sql_albums_se := fmt.Sprintf("select * from albums where EXISTS (select * from user_albums where user_id=%v and user_albums.album_id=albums.id) and albums.title LIKE '%v' OR albums.path LIKE '%v' order by (CASE WHEN albums.title LIKE '%v' THEN 2 WHEN albums.path LIKE '%v' THEN 1 END) DESC limit %v", userID, wildQuery, wildQuery, wildQuery, wildQuery, limitAlbums)
 	res, err = dataApi.Query(sql_albums_se)
 	num = len(res)

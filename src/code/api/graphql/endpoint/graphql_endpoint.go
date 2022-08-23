@@ -1,6 +1,5 @@
 package graphql_endpoint
 
-/*未改完*/
 import (
 	"time"
 
@@ -14,8 +13,8 @@ import (
 	"github.com/photoview/photoview/api/utils"
 )
 
-func GraphqlEndpoint( /*db *gorm.DB*/ ) *graphql_handler.Server {
-	graphqlResolver := resolvers.NewRootResolver( /*db*/ )
+func GraphqlEndpoint() *graphql_handler.Server {
+	graphqlResolver := resolvers.NewRootResolver()
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
 	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin
 	graphqlDirective.IsAuthorized = photoview_graphql.IsAuthorized

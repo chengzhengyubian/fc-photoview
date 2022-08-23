@@ -14,7 +14,6 @@ type periodicScanner struct {
 	ticker         *time.Ticker
 	ticker_changed chan bool
 	mutex          *sync.Mutex
-	/**/ /*db *gorm.DB*/
 }
 
 var mainPeriodicScanner *periodicScanner = nil
@@ -22,9 +21,6 @@ var mainPeriodicScanner *periodicScanner = nil
 func getPeriodicScanInterval() (time.Duration, error) {
 
 	var siteInfo models.SiteInfo
-	//if err := db.First(&siteInfo).Error; err != nil { //SELECT * FROM `site_info` ORDER BY `site_info`.`initial_setup` LIMIT 1
-	//	return 0, err
-	//}
 	sql_site_info_se := "SELECT * FROM `site_info` ORDER BY `site_info`.`initial_setup` LIMIT 1"
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_site_info_se)
@@ -48,7 +44,6 @@ func InitializePeriodicScanner( /*db *gorm.DB*/ ) error {
 	}
 
 	mainPeriodicScanner = &periodicScanner{
-		//db:             db,
 		ticker_changed: make(chan bool),
 		mutex:          &sync.Mutex{},
 	}

@@ -1,6 +1,5 @@
 package cleanup_tasks
 
-/*修改完*/
 import (
 	"encoding/json"
 	"fmt"
@@ -17,8 +16,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//测试成功
-
 // CleanupMedia removes media entries from the database that are no longer present on the filesystem
 func CleanupMedia( /*db *gorm.DB, */ albumId int, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]int, len(albumMedia))
@@ -30,20 +27,15 @@ func CleanupMedia( /*db *gorm.DB, */ albumId int, albumMedia []*models.Media) []
 	// Will get from database
 	var mediaList []models.Media
 
-	//query := db.Where("album_id = ?", albumId)
 	albumMediaId, err := json.Marshal(albumMediaIds)
 	fmt.Println(err)
 	albumMediaids := strings.Trim(string(albumMediaId), "[]")
 	// Select media from database that was not found on hard disk
 	if len(albumMedia) > 0 {
-		//query = query.Where("NOT id IN (?)", albumMediaIds)
 		sql_media_se = fmt.Sprintf("SELECT * FROM `media` WHERE album_id = %v AND NOT id IN (%v)", albumId, albumMediaids)
 	} else {
 		sql_media_se = fmt.Sprintf("SELECT * FROM `media` WHERE album_id = %v", albumId)
 	}
-	//if err := query.Find(&mediaList).Error; err != nil { //SELECT * FROM `media` WHERE album_id = 146 AND NOT id IN (97)
-	//	return []error{errors.Wrap(err, "get media files to be deleted from database")}
-	//}
 	dataApi, err := dataapi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_se)
 	num := len(res)
@@ -84,29 +76,19 @@ func CleanupMedia( /*db *gorm.DB, */ albumId int, albumMedia []*models.Media) []
 	}
 
 	if len(mediaIDs) > 0 {
-		//if err := db.Where("id IN (?)", mediaIDs).Delete(models.Media{}).Error; err != nil { //DELETE FROM `media` WHERE id IN (96)
-		//	deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
-		//}
 		mediaID, err := json.Marshal(mediaIDs)
 		fmt.Println(err)
 		mediaids := strings.Trim(string(mediaID), "[]")
-		//删除media
 		sql_media_de := fmt.Sprintf("DELETE FROM `media` WHERE id IN (%v)", mediaids)
 		dataApi.ExecuteSQl(sql_media_de)
 		fmt.Println("删除media", mediaids)
-		// Reload faces after deleting media
-		/*if face_detection.GlobalFaceDetector != nil {
-			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-				deleteErrors = append(deleteErrors, errors.Wrap(err, "reload faces from database"))
-			}
-		}*/
 	}
 
 	return deleteErrors
 }
 
 // DeleteOldUserAlbums finds and deletes old albums in the database and cache that does not exist on the filesystem anymore.
-func DeleteOldUserAlbums( /*db *gorm.DB, */ scannedAlbums []*models.Album, user *models.User) []error {
+func DeleteOldUserAlbums(scannedAlbums []*models.Album, user *models.User) []error {
 	if len(scannedAlbums) == 0 {
 		return nil
 	}
@@ -118,18 +100,6 @@ func DeleteOldUserAlbums( /*db *gorm.DB, */ scannedAlbums []*models.Album, user 
 
 	// Old albums to be deleted
 	var deleteAlbums []models.Album
-
-	// Find old albums in database
-	//query := db.
-	//	Select("albums.*").
-	//	Table("user_albums").
-	//	Joins("JOIN albums ON user_albums.album_id = albums.id").
-	//	Where("user_id = ?", user.ID).
-	//	Where("album_id NOT IN (?)", scannedAlbumIDs)
-	//
-	//if err := query.Find(&deleteAlbums).Error; err != nil { //SELECT albums.* FROM `user_albums` JOIN albums ON user_albums.album_id = albums.id WHERE user_id = 10 AND album_id NOT IN (146)
-	//	return []error{errors.Wrap(err, "get albums to be deleted from database")}
-	//}
 	scannedAlbumID, err := json.Marshal(scannedAlbumIDs)
 	fmt.Println(err)
 	scannedAlbumids := strings.Trim(string(scannedAlbumID), "[]")
@@ -165,41 +135,20 @@ func DeleteOldUserAlbums( /*db *gorm.DB, */ scannedAlbums []*models.Album, user 
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}
 	}
-
-	// Delete old albums from database
-	//err = db.Transaction(func(tx *gorm.DB) error {
-
-	//if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
-	//	return err
-	//}
-
 	//删除user_albums
 	deleteAlbumID, err := json.Marshal(deleteAlbumIDs)
 	fmt.Println(err)
 	deleteAlbumids := strings.Trim(string(deleteAlbumID), "[]")
 	sql_User_albums_de := fmt.Sprintf("DELETE FROM `user_albums` WHERE album_id IN (%v)", deleteAlbumids)
 	dataApi.ExecuteSQl(sql_User_albums_de)
-	//if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
-	//	return err
-	//}
-
 	//删除albums
 	sql_albums_de := fmt.Sprintf("DELETE FROM `albums` WHERE id IN (%v)", deleteAlbumids)
 	dataApi.ExecuteSQl(sql_albums_de)
-	//	return nil
-	//})
 
 	if err != nil {
 		scanner_utils.ScannerError("Could not delete old albums from database:\n%s\n", err)
 		deleteErrors = append(deleteErrors, err)
 	}
-
-	// Reload faces after deleting albums//重新加载
-	//if face_detection.GlobalFaceDetector != nil {
-	//	if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-	//		deleteErrors = append(deleteErrors, err)
-	//	}
-	//}
 
 	return deleteErrors
 }

@@ -1,6 +1,5 @@
 package resolvers
 
-//修改完
 import (
 	"context"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
-	//"gorm.io/gorm"
 )
 
 //
@@ -42,17 +40,9 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 	return hasPassword, nil
 }
 
-//未修改
 func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 
 	var token models.ShareToken
-	//if err := r.DB(ctx).Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
-	//	if errors.Is(err, gorm.ErrRecordNotFound) {
-	//		return nil, errors.New("share not found")
-	//	} else {
-	//		return nil, errors.Wrap(err, "failed to get share token from database")
-	//	}
-	//}
 
 	if token.Password != nil {
 		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
@@ -112,16 +102,8 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 	return &token, nil
 }
 
-//修改完，未测试
 func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error) {
 	var token models.ShareToken
-	//if err := r.DB(ctx).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
-	//	if errors.Is(err, gorm.ErrRecordNotFound) {
-	//		return false, errors.New("share not found")
-	//	} else {
-	//		return false, errors.Wrap(err, "failed to get share token from database")
-	//	}
-	//}
 
 	sql_share_tokens_select := fmt.Sprintf("select * from share_tokens where value=%v limit 1", credentials.Token)
 	dataApi, _ := DataApi.NewDataApiClient()

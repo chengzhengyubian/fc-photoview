@@ -46,10 +46,6 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	// Add sidecar data to media
 	media.SideCarPath = sideCarPath
 	media.SideCarHash = sideCarHash
-	//修改完
-	//if err := ctx.GetDB().Save(media).Error; err != nil {
-	//	return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
-	//}
 	sql_media_up := fmt.Sprintf("update media set side_car_path='%v',side_car_hash='%v' where media.id=%v", media.SideCarPath, media.SideCarHash, media.ID)
 	dataApi, _ := dataapi.NewDataApiClient()
 	dataApi.ExecuteSQl(sql_media_up)
@@ -123,11 +119,6 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	photo.SideCarHash = currentFileHash
 	photo.SideCarPath = currentSideCarPath
-
-	// save new side car hash//修改完，待测试
-	//if err := ctx.GetDB().Save(&photo).Error; err != nil {
-	//	return []*models.MediaURL{}, errors.Wrapf(err, "could not update side car hash for media: %s", photo.Path)
-	//}
 	sql_media_up := fmt.Sprintf("update media set side_car_path=%v ,side_car_hash=%v where id=%v", photo.SideCarPath, photo.SideCarHash, photo.ID)
 	dataApi, _ := dataapi.NewDataApiClient()
 	dataApi.ExecuteSQl(sql_media_up)

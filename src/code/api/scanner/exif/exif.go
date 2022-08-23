@@ -1,6 +1,5 @@
 package exif
 
-//修改完
 import (
 	"fmt"
 	DataApi "github.com/photoview/photoview/api/dataapi"
@@ -18,7 +17,6 @@ type ExifParser interface {
 var globalExifParser ExifParser
 
 func InitializeEXIFParser() {
-	// Decide between internal or external Exif parser
 	exiftoolParser, err := NewExiftoolParser()
 
 	if err != nil {
@@ -31,17 +29,12 @@ func InitializeEXIFParser() {
 }
 
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
-//修改中
 func SaveEXIF( /*tx *gorm.DB, */ media *models.Media) (*models.MediaEXIF, error) {
 
 	{
-		// Check if EXIF data already exists
 		if media.ExifID != nil {
 
 			var exif models.MediaEXIF
-			//if err := tx.First(&exif, media.ExifID).Error; err != nil {
-			//	return nil, errors.Wrap(err, "get EXIF for media from database")
-			//}
 			sql_media_exif_select := fmt.Sprintf("select * from media_exif where id=%v", media.ExifID)
 			dataApi, _ := DataApi.NewDataApiClient()
 			res, err := dataApi.Query(sql_media_exif_select)
@@ -87,17 +80,8 @@ func SaveEXIF( /*tx *gorm.DB, */ media *models.Media) (*models.MediaEXIF, error)
 	if exif == nil {
 		return nil, nil
 	}
-
-	// Add EXIF to database and link to media
-	//if err := tx.Model(&media).Association("Exif").Replace(exif); err != nil {
-	//	return nil, errors.Wrap(err, "save media exif to database")
-	//}
-	//sql_exif_insert := fmt.Sprintf("insert into media_exif (created_at,updated_at,camera,maker,lens,exposure,aperture,iso,focal_length,flash,orientation,exposure_program,gps_latitude,gps_longitude,description) values(NOW(),NOW(),'%v','%v','%v',%v,)")
 	if exif.DateShot != nil && !exif.DateShot.Equal(media.DateShot) {
 		media.DateShot = *exif.DateShot
-		//if err := tx.Save(media).Error; err != nil {
-		//	return nil, errors.Wrap(err, "update media date_shot")
-		//}
 		timestr := media.DateShot.Format("2006-01-02 15:04:05")
 		sql_media_up := fmt.Sprintf("update media set data_shot=%v where media.id=%v", timestr, media.ID)
 		dataApi, _ := DataApi.NewDataApiClient()

@@ -1,6 +1,5 @@
 package routes
 
-//修改完
 import (
 	"fmt"
 	DataApi "github.com/photoview/photoview/api/dataapi"
@@ -13,16 +12,11 @@ import (
 	"time"
 )
 
-//修改完
 func authenticateMedia(media *models.Media /*db *gorm.DB,*/, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
 		var album models.Album
-		//if err := db.First(&album, media.AlbumID).Error; err != nil { //SELECT * FROM `albums` WHERE `albums`.`id` = 1 ORDER BY `albums`.`id` LIMIT 1
-		//	return false, "internal server error", http.StatusInternalServerError, err
-		//}
-		//sql_albums_se := "SELECT * FROM `albums` WHERE `albums`.`id` = ORDER BY `albums`.`id` LIMIT 1"
 		sql_albums_se := fmt.Sprintf("SELECT * FROM `albums` WHERE `albums`.`id` =%v ORDER BY `albums`.`id` LIMIT 1", media.AlbumID)
 		dataApi, _ := DataApi.NewDataApiClient()
 		res, err := dataApi.Query(sql_albums_se)
@@ -80,17 +74,12 @@ func authenticateAlbum(album *models.Album /*db *gorm.DB, */, r *http.Request) (
 
 //修改完
 func shareTokenFromRequest( /*db *gorm.DB,*/ r *http.Request, mediaID *int, albumID *int) (success bool, responseMessage string, responseStatus int, errorMessage error) {
-	// Check if photo is authorized with a share token
 	token := r.URL.Query().Get("token")
 	if token == "" {
 		return false, "unauthorized", http.StatusForbidden, errors.New("share token not provided")
 	}
 
 	var shareToken models.ShareToken
-
-	//if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
-	//	return false, "internal server error", http.StatusInternalServerError, err
-	//}
 	sql_share_tokens_se := "select * from  share_tokens where share_tokens.value=\"" + token + "\" order by share_tokens.id limit 1"
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_share_tokens_se)
@@ -134,21 +123,8 @@ func shareTokenFromRequest( /*db *gorm.DB,*/ r *http.Request, mediaID *int, albu
 	}
 
 	if shareToken.AlbumID != nil && *albumID != *shareToken.AlbumID {
-		// Check child albums
 
 		var count int
-		//err := db.Raw(`
-		//		WITH recursive child_albums AS (
-		//			SELECT * FROM albums WHERE parent_album_id = ?
-		//			UNION ALL
-		//			SELECT child.* FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id
-		//		)
-		//		SELECT COUNT(id) FROM child_albums WHERE id = ?
-		//	`, *shareToken.AlbumID, albumID).Find(&count).Error
-
-		//if err != nil {
-		//	return false, "internal server error", http.StatusInternalServerError, err
-		//}
 		sql_albums_se := fmt.Sprintf("WITH recursive child_albums AS (SELECT * FROM albums WHERE parent_album_id = %v UNION ALL SELECT child.* FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id)SELECT COUNT(id) FROM child_albums WHERE id =%v", *shareToken.AlbumID, albumID)
 		res, err = dataApi.Query(sql_albums_se)
 		if err != nil {

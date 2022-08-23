@@ -1,6 +1,5 @@
 package actions
 
-//修改完
 import (
 	"fmt"
 	DataApi "github.com/photoview/photoview/api/dataapi"
@@ -17,22 +16,8 @@ import (
 	//"gorm.io/gorm"
 )
 
-//修改完，测试成功
 func AddMediaShare(user *models.User, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	var media models.Media
-
-	//var query string
-	//if drivers.POSTGRES.MatchDatabase(db) {
-	//	query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = \"Album\".id AND user_albums.user_id = ?)"
-	//} else {
-	//	query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)"
-	//}
-	//
-	//err := db.Joins("Album").
-	//	Where(query, user.ID).
-	//	First(&media, mediaID).
-	//	Error
-
 	sql_media_select := fmt.Sprintf("select media.* from media left join albums on media.album_id=albums.id where EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = %v) and media.id=%v limit 1", user.ID, mediaID)
 	dataApi, _ := DataApi.NewDataApiClient()
 	res, err := dataApi.Query(sql_media_select)
@@ -80,9 +65,6 @@ func AddMediaShare(user *models.User, mediaID int, expire *time.Time, password *
 		MediaID:  &mediaID,
 	}
 
-	//if err := db.Create(&shareToken).Error; err != nil {
-	//	return nil, errors.Wrap(err, "failed to insert new share token into database")
-	//}
 	//timestr := shareToken.Expire.Format("2006-01-02 15:04:05")
 	var timestr string
 	if shareToken.Expire != nil {
@@ -107,13 +89,8 @@ func AddMediaShare(user *models.User, mediaID int, expire *time.Time, password *
 	return &shareToken, nil
 }
 
-//修改完，未测试
 func AddAlbumShare(user *models.User, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	var count int64
-	//err := db.
-	//	Model(&models.Album{}).
-	//	Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
-	//	Count(&count).Error
 
 	sql_count_select := fmt.Sprintf("select count(*) from albums where EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = %v)", user.ID)
 	dataApi, _ := DataApi.NewDataApiClient()
@@ -146,10 +123,6 @@ func AddAlbumShare(user *models.User, albumID int, expire *time.Time, password *
 		MediaID:  nil,
 	}
 
-	//if err := db.Create(&shareToken).Error; err != nil {
-	//	return nil, errors.Wrap(err, "failed to insert new share token into database")
-	//}
-	//timestr := shareToken.Expire.Format("2006-01-02 15:04:05")
 	var timestr string
 	if shareToken.Expire != nil {
 		timestr = shareToken.Expire.Format("2006-01-02 15:04:05")
@@ -173,16 +146,11 @@ func AddAlbumShare(user *models.User, albumID int, expire *time.Time, password *
 	return &shareToken, nil
 }
 
-//修改完，测试成功
 func DeleteShareToken(userID int, tokenValue string) (*models.ShareToken, error) {
 	token, err := getUserToken(userID, tokenValue)
 	if err != nil {
 		return nil, err
 	}
-	//
-	//if err := db.Delete(&token).Error; err != nil {
-	//	return nil, errors.Wrapf(err, "failed to delete share token (%s) from database", tokenValue)
-	//}
 
 	sql_share_tokens_delete := fmt.Sprintf("delete from share_tokens where id=%v", token.ID)
 	dataApi, _ := DataApi.NewDataApiClient()
@@ -190,7 +158,6 @@ func DeleteShareToken(userID int, tokenValue string) (*models.ShareToken, error)
 	return token, nil
 }
 
-//修改完，未测试
 func ProtectShareToken(userID int, tokenValue string, password *string) (*models.ShareToken, error) {
 	token, err := getUserToken(userID, tokenValue)
 	if err != nil {
@@ -209,9 +176,6 @@ func ProtectShareToken(userID int, tokenValue string, password *string) (*models
 	} else {
 		pass = *token.Password
 	}
-	//if err := db.Save(&token).Error; err != nil {
-	//	return nil, errors.Wrap(err, "failed to update password for share token")
-	//}
 
 	sql_share_tokens_up := fmt.Sprintf("update share_tokens set password='%v", pass)
 	dataApi, _ := DataApi.NewDataApiClient()
@@ -233,18 +197,9 @@ func hashSharePassword(password *string) (*string, error) {
 	return hashedPassword, nil
 }
 
-//修改完，测试成功
 func getUserToken(userID int, tokenValue string) (*models.ShareToken, error) {
 
-	//var query string
-	//if drivers.POSTGRES.MatchDatabase(db) {
-	//	query = "\"Owner\".id = ? OR \"Owner\".admin = TRUE"
-	//} else {
-	//	query = "Owner.id = ? OR Owner.admin = TRUE"
-	//}
-
 	var token models.ShareToken
-	//err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where(query, userID).First(&token).Error
 
 	sql_share_tokens_select := fmt.Sprintf("select share_tokens.* from share_tokens left join users on share_tokens.owner_id=users.id where share_tokens.value= '%v' and users.id = %v OR users.admin = TRUE limit 1", tokenValue, userID)
 	dataApi, _ := DataApi.NewDataApiClient()

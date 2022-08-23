@@ -1,6 +1,5 @@
 package scanner_tasks
 
-/*修改完*/
 import (
 	"log"
 
@@ -19,7 +18,7 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 		return nil
 	}
 
-	_, err := exif.SaveEXIF( /*ctx.GetDB(), */ media)
+	_, err := exif.SaveEXIF(media)
 	if err != nil {
 		log.Printf("WARN: SaveEXIF for %s failed: %s\n", media.Title, err)
 	}

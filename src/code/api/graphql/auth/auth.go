@@ -1,6 +1,5 @@
 package auth
 
-/*修改完*/
 import (
 	"context"
 	"errors"

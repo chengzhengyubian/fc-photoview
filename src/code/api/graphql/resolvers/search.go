@@ -1,6 +1,5 @@
 package resolvers
 
-//修改完
 import (
 	"context"
 
@@ -16,5 +15,5 @@ func (r *Resolver) Search(ctx context.Context, query string, limitMedia *int, li
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.Search( /*r.DB(ctx), */ query, user.ID, limitMedia, limitAlbums)
+	return actions.Search(query, user.ID, limitMedia, limitAlbums)
 }

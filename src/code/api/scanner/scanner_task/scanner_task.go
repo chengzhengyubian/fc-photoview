@@ -1,6 +1,5 @@
 package scanner_task
 
-//修改完
 import (
 	"context"
 	"io/fs"
@@ -37,12 +36,10 @@ type TaskContext struct {
 	ctx context.Context
 }
 
-//这里注意一下
-func NewTaskContext(parent context.Context /* db *gorm.DB*/, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(parent context.Context, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
 	ctx := TaskContext{ctx: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
-	//ctx = ctx.WithDB(db)
 
 	return ctx
 }
@@ -63,16 +60,6 @@ func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {
 	return c.ctx.Value(taskCtxKeyAlbumCache).(*scanner_cache.AlbumScannerCache)
 }
 
-//func (c TaskContext) GetDB() *gorm.DB {
-//	return c.ctx.Value(taskCtxKeyDatabase).(*gorm.DB)
-//}
-
-//func (c TaskContext) DatabaseTransaction(transFunc func(ctx TaskContext) error, opts ...*sql.TxOptions) error {
-//	return c.GetDB().Transaction(func(tx *gorm.DB) error {
-//		return transFunc(c.WithDB(tx))
-//	}, opts...)
-//}
-
 func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 	return TaskContext{
 		ctx: context.WithValue(c.ctx, key, val),
@@ -82,15 +69,6 @@ func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 func (c TaskContext) Value(key interface{}) interface{} {
 	return c.ctx.Value(key)
 }
-
-//func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
-//	// Allow db to be nil in tests
-//	if db == nil && flag.Lookup("test.v") != nil {
-//		return c
-//	}
-//
-//	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.ctx))
-//}
 
 func (c TaskContext) Done() <-chan struct{} {
 	return c.ctx.Done()

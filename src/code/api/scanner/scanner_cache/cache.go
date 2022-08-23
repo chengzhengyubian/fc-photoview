@@ -62,13 +62,6 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 	return nil
 }
 
-// func (c *AlbumScannerCache) InsertPhotoType(path string, content_type MediaType) {
-// 	c.mutex.Lock()
-// 	defer c.mutex.Unlock()
-
-// 	(c.photo_types)[path] = content_type
-// }
-
 func (c *AlbumScannerCache) GetMediaType(path string) (*media_type.MediaType, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
