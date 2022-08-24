@@ -32,6 +32,7 @@ services:
           DATABASE: {{database}}
           RESOURCE_ARN: {{resourceArn}}
           SECRET_ARN: {{secretArn}}
+          PHOTOVIEW_DEVELOPMENT_MODE: 1
       triggers:
         - name: httpTrigger
           type: http
