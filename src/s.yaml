@@ -18,7 +18,7 @@ services:
         name: {{functionName}}
         description:
         # codeUri: ./photo_view_latest
-        memorySize: 3584
+        memorySize: 3072
         runtime: custom-container
         timeout: 60
         caPort: 80
